@@ -416,13 +416,15 @@ void CCal_BasicInfo() {
 		ImGui::EndTable();
 	}
 
-	ImGui::Checkbox("Hide target device from application", &CalCtx.quashTargetInContinuous);
+	ImGui::Checkbox("Hide tracker", &CalCtx.quashTargetInContinuous);
 	ImGui::SameLine();
-	ImGui::Checkbox("Enable static recalibration", &CalCtx.enableStaticRecalibration);
+	ImGui::Checkbox("Static recalibration", &CalCtx.enableStaticRecalibration);
 	ImGui::SameLine();
 	ImGui::Checkbox("Enable debug logs", &Metrics::enableLogs);
 	ImGui::SameLine();
-	ImGui::Checkbox("Require Triggers to Apply", &CalCtx.requireTriggerPressToApply);
+	ImGui::Checkbox("Lock relative transform", &CalCtx.lockRelativePosition);
+	ImGui::SameLine();
+	ImGui::Checkbox("Require triggers", &CalCtx.requireTriggerPressToApply);
 
 	// Status field...
 
