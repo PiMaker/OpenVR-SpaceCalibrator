@@ -569,7 +569,8 @@ void CalibrationTick(double time)
 			calibration.Clear();
 		}
 		else {
-			for (int i = 0; i < 10; i++) {
+			size_t drop_samples = CalCtx.SampleCount() / 10;
+			for (int i = 0; i < drop_samples; i++) {
 				calibration.ShiftSample();
 			}
 		}
