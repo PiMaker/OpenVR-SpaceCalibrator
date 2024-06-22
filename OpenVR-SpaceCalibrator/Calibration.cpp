@@ -210,6 +210,18 @@ namespace {
 			CalCtx.targetID = state.FindDevice(CalCtx.targetStandby.trackingSystem, CalCtx.targetStandby.model, CalCtx.targetStandby.serial);
 		}
 
+		for (int i = 0; i < CalCtx.MAX_CONTROLLERS; i++) {
+			if (i < state.devices.size()
+				&& state.devices[i].trackingSystem == CalCtx.targetTrackingSystem
+				&& state.devices[i].deviceClass == vr::TrackedDeviceClass_Controller
+				&& (state.devices[i].controllerRole == vr::TrackedControllerRole_LeftHand || state.devices[i].controllerRole == vr::TrackedControllerRole_RightHand))
+			{
+				CalCtx.controllerIDs[i] = state.devices[i].id;
+			} else {
+				CalCtx.controllerIDs[i] = -1;
+			}
+		}
+
 		return CalCtx.referenceID >= 0 && CalCtx.targetID >= 0;
 	}
 }
@@ -359,8 +371,8 @@ void ScanAndApplyProfile(CalibrationContext &ctx)
 	}
 }
 
-void StartCalibration()
-{
+void StartCalibration() {
+	AssignTargets();
 	CalCtx.state = CalibrationState::Begin;
 	CalCtx.wantedUpdateInterval = 0.0;
 	CalCtx.messages.clear();
@@ -369,6 +381,7 @@ void StartCalibration()
 }
 
 void StartContinuousCalibration() {
+	AssignTargets();
 	CalCtx.calibrationSpeed = CalibrationContext::FAST;
 	StartCalibration();
 	CalCtx.state = CalibrationState::Continuous;
@@ -537,20 +550,37 @@ void CalibrationTick(double time)
 		}
 
 		if (calibration.isValid()) {
-			ctx.calibratedRotation = calibration.EulerRotation();
-			ctx.calibratedTranslation = calibration.Transformation().translation() * 100.0; // convert to cm units for profile storage
-			ctx.refToTargetPose = calibration.RelativeTransformation();
-			ctx.relativePosCalibrated = calibration.isRelativeTransformationCalibrated();
+			bool triggerPressed = true;
+			if (CalCtx.state == CalibrationState::Continuous && CalCtx.requireTriggerPressToApply) {
+				vr::VRControllerState_t state;
+				for (int i = 0; i < CalCtx.MAX_CONTROLLERS; i++) {
+					if (CalCtx.controllerIDs[i] >= 0) {
+						vr::VRSystem()->GetControllerState(CalCtx.controllerIDs[i], &state, sizeof(state));
+						triggerPressed &= state.rAxis[vr::k_eControllerAxis_TrackPad /* matches trigger on Index controllers?? */].x > 0.75f;
+						if (!triggerPressed) break;
+					}
+				}
+			}
 
-			auto vrTrans = VRTranslationVec(ctx.calibratedTranslation);
-			auto vrRot = VRRotationQuat(Eigen::Quaterniond(calibration.Transformation().rotation()));
+			if (triggerPressed)
+			{
+				ctx.calibratedRotation = calibration.EulerRotation();
+				ctx.calibratedTranslation = calibration.Transformation().translation() * 100.0; // convert to cm units for profile storage
+				ctx.refToTargetPose = calibration.RelativeTransformation();
+				ctx.relativePosCalibrated = calibration.isRelativeTransformationCalibrated();
 
-			ctx.validProfile = true;
-			SaveProfile(ctx);
+				auto vrTrans = VRTranslationVec(ctx.calibratedTranslation);
+				auto vrRot = VRRotationQuat(Eigen::Quaterniond(calibration.Transformation().rotation()));
 
-			ScanAndApplyProfile(ctx);
+				ctx.validProfile = true;
+				SaveProfile(ctx);
 
-			CalCtx.Log("Finished calibration, profile saved\n");
+				ScanAndApplyProfile(ctx);
+
+				CalCtx.Log("Finished calibration, profile saved\n");
+			} else {
+				CalCtx.Log("Calibration not saved, trigger not pressed\n");
+			}
 		} else {
 			CalCtx.Log("Calibration failed.\n");
 		}

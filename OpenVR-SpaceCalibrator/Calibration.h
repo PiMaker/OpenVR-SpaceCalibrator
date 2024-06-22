@@ -30,6 +30,9 @@ struct CalibrationContext
 	CalibrationState state = CalibrationState::None;
 	int32_t referenceID = -1, targetID = -1;
 
+	static const size_t MAX_CONTROLLERS = 8;
+	int32_t controllerIDs[MAX_CONTROLLERS];
+
 	StandbyDevice targetStandby, referenceStandby;
 
 	Eigen::Vector3d calibratedRotation;
@@ -43,6 +46,7 @@ struct CalibrationContext
 	bool validProfile = false;
 	bool clearOnLog = false;
 	bool quashTargetInContinuous = false;
+	bool requireTriggerPressToApply = false;
 	double timeLastTick = 0, timeLastScan = 0;
 	double wantedUpdateInterval = 1.0;
 

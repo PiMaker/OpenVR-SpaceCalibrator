@@ -421,6 +421,8 @@ void CCal_BasicInfo() {
 	ImGui::Checkbox("Enable static recalibration", &CalCtx.enableStaticRecalibration);
 	ImGui::SameLine();
 	ImGui::Checkbox("Enable debug logs", &Metrics::enableLogs);
+	ImGui::SameLine();
+	ImGui::Checkbox("Require Triggers to Apply", &CalCtx.requireTriggerPressToApply);
 
 	// Status field...
 
