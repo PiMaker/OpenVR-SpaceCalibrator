@@ -46,6 +46,8 @@ struct CalibrationContext
 	double timeLastTick = 0, timeLastScan = 0;
 	double wantedUpdateInterval = 1.0;
 
+	float xprev, yprev, zprev;
+
 	float continuousCalibrationThreshold;
 	Eigen::Vector3d continuousCalibrationOffset;
 

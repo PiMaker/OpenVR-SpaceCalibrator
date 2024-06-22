@@ -404,6 +404,16 @@ void CalibrationTick(double time)
 		}
 	});
 
+	// check for non-updating headset tracking space (caused by quest out of bounds or taken off head for example) and abort everything for this tick
+	auto p = ctx.devicePoses[vr::k_unTrackedDeviceIndex_Hmd].vecPosition;
+	if ((p[0] == 0.0 && p[1] == 0.0 && p[2] == 0.0) || (ctx.xprev == p[0] && ctx.yprev == p[1] && ctx.zprev == p[2])) {
+		// std::cerr << "HMD tracking didn't update, skipping update" << std::endl;
+		return;
+	}
+	ctx.xprev = p[0];
+	ctx.yprev = p[1];
+	ctx.zprev = p[2];
+
 	if (ctx.state == CalibrationState::None || ctx.state == CalibrationState::ContinuousStandby
 		|| (ctx.state == CalibrationState::Continuous && !calibration.isValid()))
 	{
