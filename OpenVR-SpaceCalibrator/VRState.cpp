@@ -97,5 +97,12 @@ int VRState::FindDevice(const std::string& trackingSystem, const std::string& mo
 		if (device.trackingSystem == trackingSystem && device.model == model && device.serial == serial) return device.id;
 	}
 
+	// fallback to only serial
+	for (int i = 0; i < devices.size(); i++) {
+		const auto& device = devices[i];
+
+		if (device.serial == serial) return device.id;
+	}
+
 	return -1;
 }
